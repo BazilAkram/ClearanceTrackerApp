@@ -1,27 +1,37 @@
-using CLearanceTrackerApp.Components;
+using ClearanceTrackerApp;
+using ClearanceTrackerApp.Data;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+// Blazor services66
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
+// EF Core + SQLite
+builder.Services.AddDbContext<AppDb>(o =>
+    o.UseSqlite("Data Source=clearance.db"));
+
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+// Ensure DB exists, run migrations, seed demo data
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<AppDb>();
+    db.Database.Migrate();
+    SeedData.SeedIfEmpty(db);
+}
+
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Error", createScopeForErrors: true);
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
 
 app.UseHttpsRedirection();
-
-
+app.UseStaticFiles();
 app.UseAntiforgery();
 
-app.MapStaticAssets();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 
