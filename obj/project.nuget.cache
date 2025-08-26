@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "YAD65/yTTm8=",
+  "dgSpecHash": "h7FZ+JcXfpA=",
   "success": true,
-  "projectFilePath": "C:\\Users\\mbazi\\GitHub\\CLearanceTrackerApp\\CLearanceTrackerApp.csproj",
+  "projectFilePath": "C:\\Users\\mbazi\\GitHub\\ClearanceTrackerApp\\ClearanceTrackerApp.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\mbazi\\.nuget\\packages\\humanizer.core\\2.14.1\\humanizer.core.2.14.1.nupkg.sha512",
     "C:\\Users\\mbazi\\.nuget\\packages\\microsoft.bcl.asyncinterfaces\\7.0.0\\microsoft.bcl.asyncinterfaces.7.0.0.nupkg.sha512",

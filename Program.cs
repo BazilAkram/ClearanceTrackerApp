@@ -1,10 +1,10 @@
-using ClearanceTrackerApp;
+using ClearanceTrackerApp.Components;
 using ClearanceTrackerApp.Data;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Blazor services66
+// Blazor services
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
@@ -14,7 +14,7 @@ builder.Services.AddDbContext<AppDb>(o =>
 
 var app = builder.Build();
 
-// Ensure DB exists, run migrations, seed demo data
+// Ensure DB exists, apply migrations, seed demo rows
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDb>();
