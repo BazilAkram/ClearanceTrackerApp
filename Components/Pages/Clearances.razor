@@ -1,0 +1,53 @@
+@page "/"
+@using ClearanceTrackerApp.Data
+@inject AppDb Db
+@using Microsoft.EntityFrameworkCore
+
+<h3>Clearance Tracker</h3>
+
+@if (rows is null)
+{
+    <p>Loading…</p>
+}
+else if (rows.Count == 0)
+{
+    <p>No records yet.</p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>ID</th>
+                <th>Position</th>
+                <th>State</th>
+                <th>Updated</th>
+            </tr>
+        </thead>
+        <tbody>
+        @foreach (var r in rows)
+        {
+            <tr>
+                <td>@r.FullName</td>
+                <td>@r.AgencyId</td>
+                <td>@r.Position</td>
+                <td>@r.State</td>
+                <td>@((r.LastUpdatedUtc ?? r.CreatedUtc).ToLocalTime().ToString("g"))</td>
+            </tr>
+        }
+        </tbody>
+    </table>
+}
+
+@code {
+    List<PersonClearance>? rows;
+
+    protected override async Task OnInitializedAsync()
+    {
+        rows = await Db.Clearances
+            .AsNoTracking()
+            .OrderByDescending(x => x.LastUpdatedUtc ?? x.CreatedUtc)
+            .ToListAsync();
+    }
+}
