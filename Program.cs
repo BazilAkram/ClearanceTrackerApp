@@ -4,6 +4,9 @@ using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// For Testing
+builder.Services.AddScoped<ClearanceTrackerApp.Services.ClearanceService>();
+
 // Blazor services
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
