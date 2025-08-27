@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("ClearanceTrackerApp")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+2ef7065cdf7591ead61e6de26dd9cb5584cfc96a")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+9b9d375641cec15f298bbf4cf71f953e8ed2103c")]
 [assembly: System.Reflection.AssemblyProductAttribute("ClearanceTrackerApp")]
 [assembly: System.Reflection.AssemblyTitleAttribute("ClearanceTrackerApp")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
