@@ -6,6 +6,36 @@
 
 <h3>Clearance Tracker</h3>
 <p style="opacity:.7">Status: @status</p>
+<div style="margin: .5rem 0; display:flex; gap:.5rem; align-items:center;">
+  <button class="btn btn-primary" type="button" @onclick="() => showNew = !showNew">@(showNew ? "Close" : "Add")</button>
+</div>
+
+
+@if (showNew)
+{
+  <div style="border:1px solid #ddd; padding: .75rem; border-radius:.5rem; max-width:520px; margin-bottom:.75rem;">
+    <h4 style="margin-top:0">New Person</h4>
+    <div style="display:grid; grid-template-columns: 140px 1fr; gap:.5rem 1rem; align-items:center;">
+      <label>Full name</label>
+      <input @bind="newName" />
+
+      <label>Agency ID</label>
+      <input @bind="newAgencyId" />
+
+      <label>Position</label>
+      <input @bind="newPosition" />
+
+      <label>Note (optional)</label>
+      <input @bind="newNote" />
+    </div>
+    <div style="margin-top:.75rem; display:flex; gap:.5rem;">
+      <button type="button" @onclick="CreateAsync">Create</button>
+      <button type="button" @onclick="() => showNew = false">Cancel</button>
+    </div>
+    <p style="opacity:.7; margin:.5rem 0 0 0;">@createMsg</p>
+  </div>
+}
+
 
 @if (rows is null)
 {
@@ -39,6 +69,7 @@ else
                 <td>@((r.LastUpdatedUtc ?? r.CreatedUtc).ToLocalTime().ToString("g"))</td>
                 <td>
                     <button type="button" class="btn btn-primary" @onclick="() => AdvanceAsync(r.Id)">Advance</button>
+                    <button type="button" class="btn btn-primary" @onclick="() => OpenHistoryAsync(r.Id)">History</button>
                 </td>
             </tr>
         }
@@ -46,9 +77,48 @@ else
     </table>
 }
 
+@if (showHistory && historyPerson is not null)
+{
+    <div style="position:fixed; inset:0; background:rgba(0,0,0,.35); display:flex; align-items:center; justify-content:center;">
+        <div style="background:white; padding:1rem; border-radius:.5rem; min-width:420px; max-width:700px;">
+            <h4 style="margin-top:0">History — @historyPerson.FullName (@historyPerson.AgencyId)</h4>
+            @if (historyEvents is null || historyEvents.Count == 0)
+            {
+                <p>No events yet.</p>
+            }
+            else
+            {
+                <table class="table">
+                    <thead><tr><th>When (local)</th><th>From</th><th>To</th><th>Comment</th></tr></thead>
+                    <tbody>
+                    @foreach (var e in historyEvents)
+                    {
+                        <tr>
+                            <td>@e.AtUtc.ToLocalTime().ToString("g")</td>
+                            <td>@e.From</td>
+                            <td>@e.To</td>
+                            <td>@e.Comment</td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            }
+            <div style="display:flex; justify-content:flex-end; gap:.5rem;">
+                <button type="button" @onclick="CloseHistory">Close</button>
+            </div>
+        </div>
+    </div>
+}
+
 @code {
     List<PersonClearance>? rows;
     string status ="idle";
+    bool showNew = false;
+    string newName = "", newAgencyId = "", newPosition = "", newNote = "", createMsg = "";
+    bool showHistory = false;
+    PersonClearance? historyPerson;
+    List<ClearanceEvent>? historyEvents;
+
 
     protected override async Task OnInitializedAsync()
     {
@@ -64,13 +134,6 @@ else
         StateHasChanged();
     }
 
-    static ClearanceState Next(ClearanceState s) => s switch
-    {
-        ClearanceState.Pending => ClearanceState.InProgress,
-        ClearanceState.InProgress => ClearanceState.Approved,
-        _ => s
-    };
-
     async Task AdvanceAsync(int id)
     {
         status = $"advancing {id}…";
@@ -82,7 +145,7 @@ else
 
             if (pc is null) { status = $"not found: {id}"; return; }
 
-            var to = Next(pc.State);
+            var to = Domain.Next(pc.State);
             if (to == pc.State) { status = $"no-op; already {pc.State}"; return; }
 
             Db.Events.Add(new ClearanceEvent
@@ -111,6 +174,63 @@ else
         }
     }
 
+    async Task CreateAsync()
+    {
+        if (string.IsNullOrWhiteSpace(newName) || string.IsNullOrWhiteSpace(newAgencyId))
+        {
+            createMsg = "Name and Agency ID are required.";
+            return;
+        }
+
+        try
+        {
+            var pc = new PersonClearance
+            {
+                FullName = newName.Trim(),
+                AgencyId = newAgencyId.Trim(),
+                Position = newPosition?.Trim() ?? "",
+                Note = string.IsNullOrWhiteSpace(newNote) ? null : newNote.Trim(),
+                State = ClearanceState.Pending,
+                CreatedUtc = DateTime.UtcNow
+            };
+
+            Db.Clearances.Add(pc);
+            await Db.SaveChangesAsync();
+
+            // reset form
+            newName = newAgencyId = newPosition = newNote = "";
+            createMsg = "Created.";
+            showNew = false;
+
+            // refresh table
+            await ReloadAsync();
+        }
+        catch (Exception ex)
+        {
+            createMsg = "Error: " + ex.Message;
+            Console.Error.WriteLine(ex);
+        }
+    }
+
+    async Task OpenHistoryAsync(int id)
+    {
+        // pull person + events (newest first)
+        historyPerson = await Db.Clearances.FirstOrDefaultAsync(x => x.Id == id);
+        historyEvents = await Db.Events
+            .Where(e => e.PersonClearanceId == id)
+            .OrderByDescending(e => e.AtUtc)
+            .ToListAsync();
+
+        showHistory = true;
+        StateHasChanged();
+    }
+
+    void CloseHistory()
+    {
+        showHistory = false;
+        historyPerson = null;
+        historyEvents = null;
+    }
 
 
 }
