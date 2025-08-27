@@ -3084,9 +3084,9 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\mbazi\\GitHub\\ClearanceTrackerApp\\CLearanceTrackerApp.csproj",
-      "projectName": "CLearanceTrackerApp",
-      "projectPath": "C:\\Users\\mbazi\\GitHub\\ClearanceTrackerApp\\CLearanceTrackerApp.csproj",
+      "projectUniqueName": "C:\\Users\\mbazi\\GitHub\\ClearanceTrackerApp\\ClearanceTrackerApp.csproj",
+      "projectName": "ClearanceTrackerApp",
+      "projectPath": "C:\\Users\\mbazi\\GitHub\\ClearanceTrackerApp\\ClearanceTrackerApp.csproj",
       "packagesPath": "C:\\Users\\mbazi\\.nuget\\packages\\",
       "outputPath": "C:\\Users\\mbazi\\GitHub\\ClearanceTrackerApp\\obj\\",
       "projectStyle": "PackageReference",

@@ -1,9 +1,11 @@
 @page "/"
+@rendermode InteractiveServer
 @using ClearanceTrackerApp.Data
 @inject AppDb Db
 @using Microsoft.EntityFrameworkCore
 
 <h3>Clearance Tracker</h3>
+<p style="opacity:.7">Status: @status</p>
 
 @if (rows is null)
 {
@@ -23,6 +25,7 @@ else
                 <th>Position</th>
                 <th>State</th>
                 <th>Updated</th>
+                <th>Actions</th>
             </tr>
         </thead>
         <tbody>
@@ -34,6 +37,9 @@ else
                 <td>@r.Position</td>
                 <td>@r.State</td>
                 <td>@((r.LastUpdatedUtc ?? r.CreatedUtc).ToLocalTime().ToString("g"))</td>
+                <td>
+                    <button type="button" class="btn btn-primary" @onclick="() => AdvanceAsync(r.Id)">Advance</button>
+                </td>
             </tr>
         }
         </tbody>
@@ -42,12 +48,69 @@ else
 
 @code {
     List<PersonClearance>? rows;
+    string status ="idle";
 
     protected override async Task OnInitializedAsync()
+    {
+        await ReloadAsync();
+    }
+
+    async Task ReloadAsync()
     {
         rows = await Db.Clearances
             .AsNoTracking()
             .OrderByDescending(x => x.LastUpdatedUtc ?? x.CreatedUtc)
             .ToListAsync();
+        StateHasChanged();
     }
+
+    static ClearanceState Next(ClearanceState s) => s switch
+    {
+        ClearanceState.Pending => ClearanceState.InProgress,
+        ClearanceState.InProgress => ClearanceState.Approved,
+        _ => s
+    };
+
+    async Task AdvanceAsync(int id)
+    {
+        status = $"advancing {id}…";
+        try
+        {
+            var pc = await Db.Clearances
+                .Include(x => x.Events)
+                .FirstOrDefaultAsync(x => x.Id == id);
+
+            if (pc is null) { status = $"not found: {id}"; return; }
+
+            var to = Next(pc.State);
+            if (to == pc.State) { status = $"no-op; already {pc.State}"; return; }
+
+            Db.Events.Add(new ClearanceEvent
+            {
+                PersonClearanceId = id,
+                From = pc.State,
+                To = to,
+                Comment = "advanced via UI",
+                AtUtc = DateTime.UtcNow
+            });
+
+            pc.State = to;
+            pc.LastUpdatedUtc = DateTime.UtcNow;
+            pc.Note = "advanced via UI";
+
+            await Db.SaveChangesAsync();
+
+            await ReloadAsync();
+            status = $"advanced {id} → {to}";
+        }
+        catch (Exception ex)
+        {
+            status = "error: " + ex.Message;
+            Console.Error.WriteLine(ex); // also logs to server console
+            StateHasChanged();
+        }
+    }
+
+
+
 }
