@@ -143,6 +143,7 @@ C:\Users\mbazi\GitHub\ClearanceTrackerApp\obj\Debug\net9.0\scopedcss\Components\
 C:\Users\mbazi\GitHub\ClearanceTrackerApp\obj\Debug\net9.0\scopedcss\Components\Layout\NavMenu.razor.rz.scp.css
 C:\Users\mbazi\GitHub\ClearanceTrackerApp\obj\Debug\net9.0\scopedcss\bundle\ClearanceTrackerApp.styles.css
 C:\Users\mbazi\GitHub\ClearanceTrackerApp\obj\Debug\net9.0\scopedcss\projectbundle\ClearanceTrackerApp.bundle.scp.css
+C:\Users\mbazi\GitHub\ClearanceTrackerApp\obj\Debug\net9.0\compressed\0wr3ohr6ui-ovhzciovvp.gz
 C:\Users\mbazi\GitHub\ClearanceTrackerApp\obj\Debug\net9.0\compressed\il1q0092qy-bqjiyaj88i.gz
 C:\Users\mbazi\GitHub\ClearanceTrackerApp\obj\Debug\net9.0\compressed\ypozztqt03-c2jlpeoesf.gz
 C:\Users\mbazi\GitHub\ClearanceTrackerApp\obj\Debug\net9.0\compressed\jstmd7ldsy-erw9l3u2r3.gz
@@ -199,4 +200,3 @@ C:\Users\mbazi\GitHub\ClearanceTrackerApp\obj\Debug\net9.0\refint\ClearanceTrack
 C:\Users\mbazi\GitHub\ClearanceTrackerApp\obj\Debug\net9.0\ClearanceTrackerApp.pdb
 C:\Users\mbazi\GitHub\ClearanceTrackerApp\obj\Debug\net9.0\ClearanceTrackerApp.genruntimeconfig.cache
 C:\Users\mbazi\GitHub\ClearanceTrackerApp\obj\Debug\net9.0\ref\ClearanceTrackerApp.dll
-C:\Users\mbazi\GitHub\ClearanceTrackerApp\obj\Debug\net9.0\compressed\0wr3ohr6ui-2auu4kl9gs.gz
