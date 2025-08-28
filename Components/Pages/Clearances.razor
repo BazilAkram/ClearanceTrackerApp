@@ -5,11 +5,21 @@
 @using Microsoft.EntityFrameworkCore
 
 <h3>Clearance Tracker</h3>
+
 <p style="opacity:.7">Status: @status</p>
+
+<div style="display:flex; gap:.5rem; flex-wrap:wrap; margin:.5rem 0;">
+  <span class="chip Pending">Pending: @countPending</span>
+  <span class="chip InProgress">InProgress: @countInProgress</span>
+  <span class="chip Approved">Approved: @countApproved</span>
+  <span class="chip Rejected">Rejected: @countRejected</span>
+  <span class="chip" style="background:#eee;">Total: @countTotal</span>
+  <span class="chip Approved">Approved: @pctApproved%</span>
+</div>
+
 <div style="margin: .5rem 0; display:flex; gap:.5rem; align-items:center;">
   <button class="btn btn-primary" type="button" @onclick="() => showNew = !showNew">@(showNew ? "Close" : "Add")</button>
 </div>
-
 
 @if (showNew)
 {
@@ -67,9 +77,13 @@ else
                 <td>@r.Position</td>
                 <td>@r.State</td>
                 <td>@((r.LastUpdatedUtc ?? r.CreatedUtc).ToLocalTime().ToString("g"))</td>
-                <td>
-                    <button type="button" class="btn btn-primary" @onclick="() => AdvanceAsync(r.Id)">Advance</button>
-                    <button type="button" class="btn btn-primary" @onclick="() => OpenHistoryAsync(r.Id)">History</button>
+                <td class="d-inline-flex gap-2">
+                    @if (r.State != ClearanceState.Rejected && r.State != ClearanceState.Approved)
+                    {
+                        <button type="button" class="btn btn-success" @onclick="async () => await AdvanceAsync(r.Id)">Advance</button>
+                        <button type="button" class="btn btn-danger" @onclick="async () => await RejectAsync(r.Id)">Reject</button>
+                    }                    
+                    <button type="button" class="btn btn-primary" @onclick="async () => await OpenHistoryAsync(r.Id)">History</button>
                 </td>
             </tr>
         }
@@ -118,6 +132,8 @@ else
     bool showHistory = false;
     PersonClearance? historyPerson;
     List<ClearanceEvent>? historyEvents;
+    int countPending, countInProgress, countApproved, countRejected, countTotal;
+    double pctApproved;
 
 
     protected override async Task OnInitializedAsync()
@@ -132,6 +148,7 @@ else
             .OrderByDescending(x => x.LastUpdatedUtc ?? x.CreatedUtc)
             .ToListAsync();
         StateHasChanged();
+        await LoadStatsAsync();
     }
 
     async Task AdvanceAsync(int id)
@@ -165,6 +182,46 @@ else
 
             await ReloadAsync();
             status = $"advanced {id} → {to}";
+        }
+        catch (Exception ex)
+        {
+            status = "error: " + ex.Message;
+            Console.Error.WriteLine(ex); // also logs to server console
+            StateHasChanged();
+        }
+    }
+
+    async Task RejectAsync(int id)
+    {
+        status = $"rejecting {id}…";
+        try
+        {
+            var pc = await Db.Clearances
+                .Include(x => x.Events)
+                .FirstOrDefaultAsync(x => x.Id == id);
+
+            if (pc is null) { status = $"not found: {id}"; return; }
+
+            var to = ClearanceState.Rejected;
+            if (to == pc.State) { status = $"no-op; already {pc.State}"; return; }
+
+            Db.Events.Add(new ClearanceEvent
+            {
+                PersonClearanceId = id,
+                From = pc.State,
+                To = to,
+                Comment = "Rejected via UI",
+                AtUtc = DateTime.UtcNow
+            });
+
+            pc.State = to;
+            pc.LastUpdatedUtc = DateTime.UtcNow;
+            pc.Note = "Rejected via UI";
+
+            await Db.SaveChangesAsync();
+
+            await ReloadAsync();
+            status = $"Rejected {id} → {to}";
         }
         catch (Exception ex)
         {
@@ -230,6 +287,16 @@ else
         showHistory = false;
         historyPerson = null;
         historyEvents = null;
+    }
+
+    async Task LoadStatsAsync()
+    {
+        countPending    = await Db.Clearances.CountAsync(x => x.State == ClearanceState.Pending);
+        countInProgress = await Db.Clearances.CountAsync(x => x.State == ClearanceState.InProgress);
+        countApproved   = await Db.Clearances.CountAsync(x => x.State == ClearanceState.Approved);
+        countRejected   = await Db.Clearances.CountAsync(x => x.State == ClearanceState.Rejected);
+        countTotal      = countPending + countInProgress + countApproved + countRejected;
+        pctApproved     = countTotal == 0 ? 0 : Math.Round(100.0 * countApproved / countTotal, 1);
     }
 
 
